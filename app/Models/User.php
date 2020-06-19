@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Auth;
 
 class User extends Authenticatable
 {
@@ -55,9 +56,13 @@ class User extends Authenticatable
         return $this->hasMany(Status::class);
     }
 
-    public function feed(){
-        return $this->statuses()
-            ->orderBy('created_at','desc');
+    public function feed()
+    {
+        $user_ids = $this->followings->pluck('id')->toArray();
+        array_push($user_ids, $this->id);
+        return Status::whereIn('user_id', $user_ids)
+            ->with('user')
+            ->orderBy('created_at', 'desc');
     }
 
     public function followers()
@@ -71,7 +76,7 @@ class User extends Authenticatable
     }
 
     public function follow($user_ids){
-        if(!is_array($user_id)){
+        if(!is_array($user_ids)){
             $user_ids = compact('user_ids');
         }
         $this->followings()->sync($user_ids,false);
@@ -87,4 +92,5 @@ class User extends Authenticatable
     public function isFollowing($user_ids){
         return $this->followings->contains($user_ids);
     }
+
 }
