@@ -1,27 +1,15 @@
 <?php
 
-Route::get('/', 'StaticPagesController@home')->name('home');
-Route::get('/help', 'StaticPagesController@help')->name('help');
-Route::get('/about', 'StaticPagesController@about')->name('about');
+Route::get('/', 'PagesController@root')->name('root');
 
-Route::get('signup', 'UsersController@create')->name('signup');
-Route::resource('users', 'UsersController');
+// 在之前的路由里加上一个 verify 参数
+Auth::routes(['verify' => true]);
 
-Route::get('login', 'SessionsController@create')->name('login');
-Route::post('login', 'SessionsController@store')->name('login');
-Route::delete('logout', 'SessionsController@destroy')->name('logout');
+Route::get('/home', 'HomeController@index')->name('home');
 
-Route::get('signup/confirm/{token}', 'UsersController@confirmEmail')->name('confirm_email');
-
-Route::get('password/reset', 'Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
-Route::post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail')->name('password.email');
-Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
-Route::post('password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
-
-Route::resource('statuses', 'StatusesController', ['only' => ['store', 'destroy']]);
-
-Route::get('/users/{user}/followings', 'UsersController@followings')->name('users.followings');
-Route::get('/users/{user}/followers', 'UsersController@followers')->name('users.followers');
-
-Route::post('/users/followers/{user}', 'FollowersController@store')->name('followers.store');
-Route::delete('/users/followers/{user}', 'FollowersController@destroy')->name('followers.destroy');
+// auth 中间件代表需要登录，verified中间件代表需要经过邮箱验证
+Route::group(['middleware' => ['auth', 'verified']], function() {
+    Route::get('user_addresses', 'UserAddressesController@index')->name('user_addresses.index');
+    Route::get('user_addresses/create', 'UserAddressesController@create')->name('user_addresses.create');
+    Route::post('user_addresses', 'UserAddressesController@store')->name('user_addresses.store');
+});
